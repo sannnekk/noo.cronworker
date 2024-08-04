@@ -1,0 +1,8 @@
+.env
+/node_modules
+/k8n
+test.sh
+/.vscode
+*.heapsnapshot
+uploads/*
+/logs
