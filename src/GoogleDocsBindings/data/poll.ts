@@ -35,36 +35,56 @@ export async function getPollData(
   )
 
   const pollAnswers = await connection.query(
-    `SELECT * FROM poll_answer 
+    `SELECT 
+    poll_answer.user_auth_identifier as user_auth_identifier,
+    poll_answer.question_type as type,
+    poll_answer.questionId as questionId,
+    poll_question.order as questionOrder,
+    poll_answer.text as text,
+    poll_answer.number as number,
+    poll_answer.date as date,
+    poll_answer.choices as choices,
+    poll_answer.rating as rating,
+    media.src as src
+   FROM poll_answer 
 	 LEFT JOIN poll_question ON poll_question.id = poll_answer.questionId 
 	 LEFT JOIN media ON media.pollAnswerId = poll_answer.id
 	 WHERE poll_question.pollId = '${selectorValue}'`
   )
 
   const title = poll.at(0).title as string
-  const head = pollQuestions.map(
-    (question: any) =>
-      `"${question.text}, ${question.description.replaceAll('\n', ' ')}"`
-  )
+  const head = pollQuestions
+    .sort((q1: any, q2: any) => {
+      return parseInt(q1.order) - parseInt(q2.order)
+    })
+    .map(
+      (question: any) =>
+        `"${question.text}, ${question.description.replaceAll('\n', ' ')}"`
+    )
   const answerRows = {} as Record<string, Record<string, string>>
 
   for (const answer of pollAnswers) {
     const identifier = answer.user_auth_identifier
     const questionId = answer.questionId
+    const order = answer.questionOrder
 
     if (!answerRows[identifier]) {
-      answerRows[identifier] = {
-        [questionId]: getAnswerText(answer),
-      }
-    } else {
-      answerRows[identifier][questionId] = getAnswerText(answer)
+      answerRows[identifier] = {}
     }
+
+    answerRows[identifier][`${order}-${questionId}`] = getAnswerText(answer)
   }
+
+  //writeFileSync('tmp.json', JSON.stringify(answerRows, null, 2))
 
   let data = ''
 
   for (const [identifier, answers] of Object.entries(answerRows)) {
-    data += Object.values(answers).join(',') + ',,' + identifier + ',\n'
+    const sortedAnswers = Object.keys(answers)
+      .sort()
+      .map((key) => answers[key])
+
+    data += `${sortedAnswers.join(',')},,${identifier}\n`
   }
 
   return `
