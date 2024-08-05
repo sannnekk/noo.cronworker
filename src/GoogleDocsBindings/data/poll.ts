@@ -42,7 +42,9 @@ export async function getPollData(
   )
 
   const title = poll.at(0).title
-  const head = pollQuestions.map((question: any) => question.text)
+  const head = pollQuestions.map(
+    (question: any) => `${question.text} (${question.description})`
+  )
   const answerRows = {} as Record<string, Record<string, string>>
 
   for (const answer of pollAnswers) {
@@ -58,11 +60,18 @@ export async function getPollData(
     }
   }
 
+  let data = ''
+
+  for (const [, answers] of Object.entries(answerRows)) {
+    data +=
+      Object.values(answers)
+        .map((answer) => getAnswerText(answer))
+        .join(',') + '\n'
+  }
+
   return `
 	${title},
 	${head.join(',')},
-	${Object.values(answerRows)
-    .map((row) => Object.values(row).join(','))
-    .join('\n')},
+	${data},
 	`
 }
