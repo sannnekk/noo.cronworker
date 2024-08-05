@@ -3,17 +3,17 @@ import { DBConnection } from '@modules/Core/DB/DBConnection'
 function getAnswerText(answer: any): string {
   switch (answer.type) {
     case 'text':
-      return answer.text
+      return `"${answer.text}"`
     case 'number':
-      return answer.number
+      return `"${answer.number}"`
     case 'date':
-      return answer.date
+      return `"${answer.date}"`
     case 'choice':
-      return answer.choices
+      return `"${answer.choices}"`
     case 'rating':
-      return answer.rating
+      return `"${answer.rating}"`
     case 'file':
-      return process.env.CDN_URL + answer.src
+      return `"${process.env.CDN_URL + answer.src}"`
     default:
       return '-'
   }
@@ -41,9 +41,10 @@ export async function getPollData(
 	 WHERE poll_question.pollId = '${selectorValue}'`
   )
 
-  const title = poll.at(0).title
+  const title = poll.at(0).title as string
   const head = pollQuestions.map(
-    (question: any) => `${question.text}, ${question.description}`
+    (question: any) =>
+      `"${question.text}, ${question.description.replaceAll('\n', ' ')}"`
   )
   const answerRows = {} as Record<string, Record<string, string>>
 
@@ -63,12 +64,12 @@ export async function getPollData(
   let data = ''
 
   for (const [identifier, answers] of Object.entries(answerRows)) {
-    data += Object.values(answers).join(';') + ';;' + identifier + ';\n'
+    data += Object.values(answers).join(',') + ',,' + identifier + ',\n'
   }
 
   return `
-	${title};
-	${head.join(';')};
-	${data};
+	${title.replaceAll('\n', ' ')},
+	${head.join(',')},
+	${data},
 	`
 }

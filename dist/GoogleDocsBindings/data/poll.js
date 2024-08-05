@@ -1,17 +1,17 @@
 function getAnswerText(answer) {
     switch (answer.type) {
         case 'text':
-            return answer.text;
+            return `"${answer.text}"`;
         case 'number':
-            return answer.number;
+            return `"${answer.number}"`;
         case 'date':
-            return answer.date;
+            return `"${answer.date}"`;
         case 'choice':
-            return answer.choices;
+            return `"${answer.choices}"`;
         case 'rating':
-            return answer.rating;
+            return `"${answer.rating}"`;
         case 'file':
-            return process.env.CDN_URL + answer.src;
+            return `"${process.env.CDN_URL + answer.src}"`;
         default:
             return '-';
     }
@@ -27,7 +27,7 @@ export async function getPollData(connection, binding) {
 	 LEFT JOIN media ON media.pollAnswerId = poll_answer.id
 	 WHERE poll_question.pollId = '${selectorValue}'`);
     const title = poll.at(0).title;
-    const head = pollQuestions.map((question) => `${question.text}, ${question.description}`);
+    const head = pollQuestions.map((question) => `"${question.text}, ${question.description.replaceAll('\n', ' ')}"`);
     const answerRows = {};
     for (const answer of pollAnswers) {
         const identifier = answer.user_auth_identifier;
@@ -43,11 +43,11 @@ export async function getPollData(connection, binding) {
     }
     let data = '';
     for (const [identifier, answers] of Object.entries(answerRows)) {
-        data += Object.values(answers).join(';') + ';;' + identifier + ';\n';
+        data += Object.values(answers).join(',') + ',,' + identifier + ',\n';
     }
     return `
-	${title};
-	${head.join(';')};
-	${data};
+	${title.replaceAll('\n', ' ')},
+	${head.join(',')},
+	${data},
 	`;
 }
