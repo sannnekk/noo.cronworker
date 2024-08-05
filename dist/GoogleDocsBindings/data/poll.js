@@ -27,7 +27,7 @@ export async function getPollData(connection, binding) {
 	 LEFT JOIN media ON media.pollAnswerId = poll_answer.id
 	 WHERE poll_question.pollId = '${selectorValue}'`);
     const title = poll.at(0).title;
-    const head = pollQuestions.map((question) => `${question.text} (${question.description})`);
+    const head = pollQuestions.map((question) => `${question.text}, ${question.description}`);
     const answerRows = {};
     for (const answer of pollAnswers) {
         const identifier = answer.user_auth_identifier;
@@ -42,15 +42,12 @@ export async function getPollData(connection, binding) {
         }
     }
     let data = '';
-    for (const [, answers] of Object.entries(answerRows)) {
-        data +=
-            Object.values(answers)
-                .map((answer) => getAnswerText(answer))
-                .join(',') + '\n';
+    for (const [identifier, answers] of Object.entries(answerRows)) {
+        data += Object.values(answers).join(';') + ';;' + identifier + ';\n';
     }
     return `
-	${title},
-	${head.join(',')},
-	${data},
+	${title};
+	${head.join(';')};
+	${data};
 	`;
 }
